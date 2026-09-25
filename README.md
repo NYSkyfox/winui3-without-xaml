@@ -4,6 +4,7 @@
 > 原仓库停留在 WindowsAppSDK 1.2（2023-01），依赖和工程配置都已过时。
 > 升级内容：
 > - 依赖全部升到最新：`Microsoft.WindowsAppSDK 2.5.1`、`Microsoft.Windows.CppWinRT 3.0.260818.1`、`Microsoft.Windows.SDK.BuildTools 10.0.28000.2705`，并从 `packages.config` **迁移到 PackageReference**（WindowsAppSDK 2.x 的伞形包依赖 10 个版本独立的子包，只有 PackageReference 能正确解析传递依赖）
+> - **体积优化**：弃用伞形包 `Microsoft.WindowsAppSDK`，只引用 WinUI 3 必需的子包（WinUI / Foundation / Base / DWrite + WebView2），砍掉 AI/ML/Search/Widgets（onnxruntime、DirectML 等 ~100MB）；Release 不生成 PDB。**产物从 56MB(zip)/172MB(解压) 降到 24MB(zip)/60MB(解压)**
 > - `.vcxproj` 修正：4 套配置统一为 `SubSystem=Windows` + `PrecompiledHeader=Use`，加入 `NOMINMAX`、`WIN32_LEAN_AND_MEAN`、`LanguageStandard=stdcpp17`、`WindowsAppSDKAutoInitialize=false`
 > - `main.cpp` 加入窗口标题、副标题（版本号），并给关键段落加注释
 > - `pch.h` 显式 include `Microsoft.UI.Xaml.h`，头文件列表更完整
