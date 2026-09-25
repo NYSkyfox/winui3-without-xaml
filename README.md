@@ -1,5 +1,17 @@
 # WinUI 3 in C++ Without XAML
 
+> **本仓库已升级到 WindowsAppSDK 2.5.1 + CppWinRT 3.0（2026-08）。**
+> 原仓库停留在 WindowsAppSDK 1.2（2023-01），依赖和工程配置都已过时。
+> 升级内容：
+> - `packages.config` 三个包全部升到最新（`Microsoft.WindowsAppSDK 2.5.1`、`Microsoft.Windows.CppWinRT 3.0.260818.1`、`Microsoft.Windows.SDK.BuildTools 10.0.28000.2705`）
+> - `.vcxproj` 修正：4 套配置统一为 `SubSystem=Windows` + `PrecompiledHeader=Use`，加入 `NOMINMAX`、`WIN32_LEAN_AND_MEAN`、`LanguageStandard=stdcpp17`、`WindowsAppSDKAutoInitialize=false`
+> - `main.cpp` 加入窗口标题、副标题（版本号），并给关键段落加注释
+> - `pch.h` 显式 include `Microsoft.UI.Xaml.h`，头文件列表更完整
+>
+> **核心 API 在 1.x → 2.x 之间保持稳定**，本项目的启动流程（`wWinMain` → `Application::Start` → F-bound `ApplicationT` → `IXamlMetadataProvider` 注入主题）在 2.x 里完全通用。
+
+
+
 ![controls](controls.png)
 
 WinUI 3 is a modern UI framework for Windows apps. WinUI 3 can be used with C++/WinRT, a C++17 language projection that provides access to the Windows Runtime (WinRT) APIs. Usually, XAML is used to define the UI. Therefore, XAML and C++ are combined to create applications. However, there are those who want to create simple applications in C++ without XAML. This repository provides a step-by-step guide to creating WinUI3 apps in C++ without XAML.
@@ -11,6 +23,37 @@ Creating WinUI 3 apps without XAML is an unsupported scenario and some features 
 You can download a sample zip file from [winui3-without-xaml repository](https://github.com/sotanakamura/winui3-without-xaml/).
 
 [master.zip](https://github.com/sotanakamura/winui3-without-xaml/archive/refs/heads/master.zip).
+
+## Quick Start (WindowsAppSDK 2.5)
+
+Prerequisites:
+- **Visual Studio 2022** with the "Desktop development with C++" workload and "Windows 11 SDK" (10.0.22621 or newer)
+- **NuGet CLI** on PATH (or let VS restore automatically)
+
+```powershell
+cd winui3-without-xaml
+nuget restore                 # 下载三个包到 packages\ 目录
+# 用 VS 打开 winui3-without-xaml.sln
+# 选 Release|x64，F5 运行
+```
+
+输出是 **自包含** 的 `winui3-without-xaml.exe` + WindowsAppSDK 运行时 dll。整个 `Release` 输出目录拷走，就能在没装 WindowsAppSDK 的 Windows 10/11 机器上跑。
+
+### 如果只想要"最小可跑"
+- 保留 `WindowsAppSDKSelfContained=true`（默认就是）
+- 不要改 `WindowsPackageType=None`（否则要走 MSIX 打包，需要证书）
+- 不要删 `#undef GetCurrentTime`（`Windows.h` 的宏冲突）
+- 不要删 `IXamlMetadataProvider` 相关代码（否则按钮会变回 UWP 老样式）
+
+### 常见问题
+
+| 症状 | 原因 / 解法 |
+|---|---|
+| 编译报 `GetCurrentTime` 相关错误 | `pch.h` 里忘了 `#undef GetCurrentTime` |
+| 运行闪退、没窗口 | 目标机器缺 VC++ 运行库，装 [VC 2015-2022 Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170) |
+| 链接报 `unresolved external symbol wWinMain` | vcxproj 里 `<SubSystem>` 不是 `Windows`，检查 4 套配置都改过 |
+| 按钮看起来"不像 WinUI 3"（老 UWP 样式） | 没调用 `Resources().MergedDictionaries().Append(XamlControlsResources())`，或 `IXamlMetadataProvider` 没实现 |
+| 编译非常慢 | 确认 4 套配置都启用了 PrecompiledHeader，`pch.cpp` 是 `Create`、`main.cpp` 是 `Use` |
 
 ## Issues
 ~~Issues is closed. When you have a problem, please comment in [windows-ui-xaml Discussions](https://github.com/microsoft/microsoft-ui-xaml/discussions/8151) to show needs of WinUI 3 without XAML to WinUI 3 team.~~
@@ -366,13 +409,14 @@ This method is an unsupported scenario; it is strongly recommended to use XAML w
 
 ### Documents
 
-* [Windows App SDK](https://learn.microsoft.com/en-us/windows/apps/windows-app-sdk/): The Windows UI Library (WinUI) 3 is the latest and recommended user interface (UI) framework for Windows desktop apps. By incorporating the Fluent Design System into all experiences, controls, and styles, WinUI provides consistent, intuitive, and accessible experiences using the latest UI patterns. WinUI 3 is available as part of the Windows App SDK.
-* [C++/WinRT](https://learn.microsoft.com/ja-jp/windows/uwp/cpp-and-winrt-apis/): C++/WinRT is an entirely standard modern C++17 language projection for Windows Runtime (WinRT) APIs, implemented as a header-file-based library, and designed to provide you with first-class access to the modern Windows API. 
-* [XAML](https://learn.microsoft.com/ja-jp/windows/uwp/xaml-platform/): Extensible Application Markup Language (XAML) is a declarative language. Specifically, XAML can initialize objects and set properties of objects using a language structure that shows hierarchical relationships between multiple objects and a backing type convention that supports extension of types. You can create visible UI elements in the declarative XAML markup.
+ * [Windows App SDK](https://learn.microsoft.com/en-us/windows/apps/windows-app-sdk/): The Windows UI Library (WinUI) 3 is the latest and recommended user interface (UI) framework for Windows desktop apps. By incorporating the Fluent Design System into all experiences, controls, and styles, WinUI provides consistent, intuitive, and accessible experiences using the latest UI patterns. WinUI 3 is available as part of the Windows App SDK.
+ * [C++/WinRT](https://learn.microsoft.com/en-us/windows/apps/cpp/cpp-winrt/): C++/WinRT is an entirely standard modern C++17 language projection for Windows Runtime (WinRT) APIs, implemented as a header-file-based library, and designed to provide you with first-class access to the modern Windows API. 
+ * [XAML](https://learn.microsoft.com/en-us/windows/apps/develop/xaml/): Extensible Application Markup Language (XAML) is a declarative language. Specifically, XAML can initialize objects and set properties of objects using a language structure that shows hierarchical relationships between multiple objects and a backing type convention that supports extension of types. You can create visible UI elements in the declarative XAML markup.
 
 ### API reference
 
-* [Windows App SDK APIs Reference](https://learn.microsoft.com/en-us/windows/windows-app-sdk/api/winrt/): APIs for WinUI 3.
-* [Windows SDK APIs Reference](https://learn.microsoft.com/en-us/uwp/api/): APIs for modern Windows features.
+ * [Windows App SDK APIs Reference](https://learn.microsoft.com/en-us/windows/windows-app-sdk/api/winrt/): APIs for WinUI 3.
+ * [Windows SDK APIs Reference](https://learn.microsoft.com/en-us/windows/uwp/api/): APIs for modern Windows features.
+ * [Windows App SDK versioning & release notes](https://learn.microsoft.com/en-us/windows/apps/windows-app-sdk/stability-channels): 1.x → 2.x 迁移、各版本新增控件/特性列表。
 
 Some text in this document is cited from Microsoft documentation. [https://learn.microsoft.com](https://learn.microsoft.com)

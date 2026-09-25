@@ -1,0 +1,54 @@
+name: build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        configuration: [ Release ]
+        platform: [ x64 ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Show MSBuild / NuGet versions
+        run: |
+          msbuild -version
+          nuget help | Select-Object -First 3
+
+      - name: NuGet restore
+        run: nuget restore winui3-without-xaml.sln
+
+      - name: Build
+        run: |
+          msbuild winui3-without-xaml.sln `
+            /p:Configuration=${{ matrix.configuration }} `
+            /p:Platform=${{ matrix.platform }} `
+            /m /nologo /v:minimal `
+            /p:WindowsAppSDKSelfContained=true
+
+      - name: List output
+        run: |
+          Get-ChildItem -Recurse -Path "${{ matrix.platform }}/${{ matrix.configuration }}" |
+            Select-Object FullName, Length |
+            Format-Table -AutoSize
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: winui3-without-xaml-${{ matrix.platform }}-${{ matrix.configuration }}
+          path: ${{ matrix.platform }}/${{ matrix.configuration }}
+          retention-days: 30
+          if-no-files-found: error
