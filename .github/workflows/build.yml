@@ -38,9 +38,12 @@ jobs:
 
       - name: List output
         run: |
-          Get-ChildItem -Recurse -Path "${{ matrix.platform }}/${{ matrix.configuration }}" |
+          Get-ChildItem -Recurse -File -Path "${{ matrix.platform }}/${{ matrix.configuration }}" |
             Select-Object FullName, Length |
             Format-Table -AutoSize
+          $total = (Get-ChildItem -Recurse -File -Path "${{ matrix.platform }}/${{ matrix.configuration }}" |
+            Measure-Object -Property Length -Sum).Sum
+          Write-Host "=== Total output size: $([math]::Round($total/1MB, 1)) MB ==="
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

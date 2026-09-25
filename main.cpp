@@ -38,7 +38,7 @@ public:
 
         // 副标题：小字说明当前 SDK 版本
         TextBlock subtitle;
-        subtitle.Text(L"WindowsAppSDK 2.5  ·  CppWinRT 3.0");
+        subtitle.Text(L"WinUI 3  ·  CppWinRT 3.0  ·  minimal footprint");
         subtitle.HorizontalAlignment(HorizontalAlignment::Center);
         subtitle.FontSize(14);
         subtitle.Foreground(winrt::Microsoft::UI::Xaml::Media::SolidColorBrush(
