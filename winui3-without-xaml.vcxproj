@@ -30,6 +30,9 @@
     <AppxPackage>false</AppxPackage>
     <!-- 我们在 wWinMain 里手动 init_apartment，禁用 WindowsAppSDK 的自动注入 -->
     <WindowsAppSDKAutoInitialize>false</WindowsAppSDKAutoInitialize>
+    <!-- 我们用 WinUI 子包而非伞形包，MicrosoftWindowsAppSDKPackageDir 不会被设置，
+         导致 WebView2 的 WinMD 不注入（cppwinrt 报 CoreWebView2 找不到），显式开启 -->
+    <WebView2UseWinRT>true</WebView2UseWinRT>
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{dcb75a3c-72f4-4135-9b2e-9fc9c57a981d}</ProjectGuid>
@@ -184,7 +187,9 @@
     <PackageReference Include="Microsoft.WindowsAppSDK.DWrite">
       <Version>2.1.0</Version>
     </PackageReference>
-    <!-- WinUI 的 WinMD 引用了 WebView2 类型，cppwinrt 生成投影时必须能看到它的 WinMD -->
+    <!-- WinUI 的 WinMD（IWebView2 接口）引用了 WebView2 类型。
+         WebView2 包自己的 targets 在 Win32 工程里默认不注入 WinMD，
+         这里通过 CppWinRTSDKReferences 把 WinMD 直接喂给 cppwinrt -->
     <PackageReference Include="Microsoft.Web.WebView2">
       <Version>1.0.3719.77</Version>
     </PackageReference>
@@ -194,6 +199,9 @@
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools">
       <Version>10.0.28000.2705</Version>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <CppWinRTSDKReferences Include="$(NuGetPackageRoot)microsoft.web.webview2\1.0.3719.77\lib\Microsoft.Web.WebView2.Core.winmd" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
