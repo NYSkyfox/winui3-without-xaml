@@ -3,7 +3,7 @@
 > **本仓库已升级到 WindowsAppSDK 2.5.1 + CppWinRT 3.0（2026-08）。**
 > 原仓库停留在 WindowsAppSDK 1.2（2023-01），依赖和工程配置都已过时。
 > 升级内容：
-> - `packages.config` 三个包全部升到最新（`Microsoft.WindowsAppSDK 2.5.1`、`Microsoft.Windows.CppWinRT 3.0.260818.1`、`Microsoft.Windows.SDK.BuildTools 10.0.28000.2705`）
+> - 依赖全部升到最新：`Microsoft.WindowsAppSDK 2.5.1`、`Microsoft.Windows.CppWinRT 3.0.260818.1`、`Microsoft.Windows.SDK.BuildTools 10.0.28000.2705`，并从 `packages.config` **迁移到 PackageReference**（WindowsAppSDK 2.x 的伞形包依赖 10 个版本独立的子包，只有 PackageReference 能正确解析传递依赖）
 > - `.vcxproj` 修正：4 套配置统一为 `SubSystem=Windows` + `PrecompiledHeader=Use`，加入 `NOMINMAX`、`WIN32_LEAN_AND_MEAN`、`LanguageStandard=stdcpp17`、`WindowsAppSDKAutoInitialize=false`
 > - `main.cpp` 加入窗口标题、副标题（版本号），并给关键段落加注释
 > - `pch.h` 显式 include `Microsoft.UI.Xaml.h`，头文件列表更完整
@@ -32,7 +32,8 @@ Prerequisites:
 
 ```powershell
 cd winui3-without-xaml
-nuget restore                 # 下载三个包到 packages\ 目录
+# PackageReference 项目：用 VS 打开 sln 会自动还原 NuGet；
+# 命令行还原可用: msbuild winui3-without-xaml.sln /t:Restore
 # 用 VS 打开 winui3-without-xaml.sln
 # 选 Release|x64，F5 运行
 ```

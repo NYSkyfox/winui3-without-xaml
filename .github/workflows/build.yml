@@ -25,8 +25,8 @@ jobs:
           msbuild -version
           nuget help | Select-Object -First 3
 
-      - name: NuGet restore
-        run: nuget restore winui3-without-xaml.sln
+      - name: Restore
+        run: msbuild winui3-without-xaml.sln /t:Restore /v:minimal
 
       - name: Build
         run: |
