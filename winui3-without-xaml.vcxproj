@@ -166,10 +166,12 @@
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
-    <!-- 体积优化：不用伞形包 Microsoft.WindowsAppSDK（它会把 AI/ML/Search/Widgets 等
-         全部 10 个子包都拉进来，白白多 ~50MB），只引用 WinUI 3 必需的 4 个子包：
-         WinUI（控件）+ Foundation + Base + DWrite（文本渲染）
-         Runtime 子包会作为传递依赖自动带进来 -->
+    <!-- 体积优化：不用伞形包 Microsoft.WindowsAppSDK（它会把 AI/ML/Search/Widgets
+         等全部子包都拉进来，白白多 ~100MB：onnxruntime 20MB + DirectML 18MB + ...）
+         最小依赖集（WinUI 子包的传递依赖闭包）：
+           WinUI -> WebView2 + Base + Foundation + InteractiveExperiences -> Base
+           DWrite 为文本渲染所需
+         AI / ML / Search / Widgets 全部砍掉（本项目用不到） -->
     <PackageReference Include="Microsoft.WindowsAppSDK.WinUI">
       <Version>2.3.9</Version>
     </PackageReference>
@@ -181,6 +183,10 @@
     </PackageReference>
     <PackageReference Include="Microsoft.WindowsAppSDK.DWrite">
       <Version>2.1.0</Version>
+    </PackageReference>
+    <!-- WinUI 的 WinMD 引用了 WebView2 类型，cppwinrt 生成投影时必须能看到它的 WinMD -->
+    <PackageReference Include="Microsoft.Web.WebView2">
+      <Version>1.0.3719.77</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Windows.CppWinRT">
       <Version>3.0.260818.1</Version>
